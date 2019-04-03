@@ -28,5 +28,6 @@ lastUsed: 123456
 - other routes? (about, contact,...)
 - add about section
 - add readme
+- deploy (github or surge)
 
 "I got sick of heavy weather apps with ads... also i wanted to play with react"
