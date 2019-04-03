@@ -1,0 +1,26 @@
+// Override default variables before the import
+// $body-bg: #000;
+
+// Import Bootstrap and its default variables
+@import '~bootstrap/scss/bootstrap.scss';
+
+.wrap {
+  padding-top: 100px;
+}
+
+// TODO: css grid might make more sense...
+.daily-wx ol {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  overflow-x: scroll;
+
+}
+.wx-day {
+  border: solid 2px darkgray;
+  padding: 20px;
+  margin-left: 20px;
+  &:first-child {
+    margin-left: 0;
+  }
+}
