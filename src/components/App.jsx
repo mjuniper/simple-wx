@@ -3,16 +3,17 @@ import Navbar from './Navbar.jsx';
 import Day from './Day.jsx';
 import ReactDOM from 'react-dom';
 
-// TODO: get position vs location straight...
-// maybe it is location = { name, position }
+// TODO: i'm passing around huge blobs of data - probably want to pare down and transform them
+
+// TODO: refactor this into utils module
+function getProp(path, obj, def = undefined) {
+  return path.split(".").reduce(function (prev, curr) {
+    return prev ? prev[curr] : def;
+  }, obj);
+}
 
 // TODO: refactor this into a module
 const WX_API = 'https://api.weather.gov';
-
-async function fetchDailyWx(position) {
-  const wxPoint = await fetchWxPoint(position);
-  return await fetchWxForecast(wxPoint);
-}
 
 function fetchWxPoint(position) {
   const lat = position.coords.latitude;
@@ -67,7 +68,7 @@ export class App extends Component {
   // }
 
   componentWillMount() {
-    // TODO: should it use current location or last location???
+    // TODO: should it use current location or last location when the page loads???
     this.getLocation();
   }
 
@@ -91,8 +92,12 @@ export class App extends Component {
     );
   }
 
-  handleGeolocationSuccess(position) {
-    this.setState({ currentLocation: position });
+  async handleGeolocationSuccess(position) {
+    const wxPoint = await fetchWxPoint(position);
+    const city = getProp('properties.relativeLocation.properties.city', wxPoint);
+    const state = getProp('properties.relativeLocation.properties.state', wxPoint);
+    const name = (city && state) ? `${city}, ${state}` : null;
+    this.setState({ currentLocation: { name, position, wxPoint } });
   }
 
   handleGeolocationError() {
@@ -106,13 +111,12 @@ export class App extends Component {
 
   async fetchDailyWx(loc) {
     this.setState({ loading: true });
-    const dailyWx = await fetchDailyWx(loc);
-    // debugger;
+    const dailyWx = await fetchWxForecast(loc.wxPoint);
     this.setState({
       loading: false,
       dailyWx
     });
-    console.log(dailyWx);
+    // console.log(dailyWx);
     // return fetchDailyWx(loc)
     //   .then(data => {
     //     this.setState({ trailData: data, loading: false });
@@ -140,28 +144,24 @@ export class App extends Component {
     //   showClosedTrails,
     //   showAllTrails} = this;
 
-    // TODO: make this more resilient
-    // we probably want to transform at least some of the data
-    // also we are dotting into this.state.dailyWx.properties.periods.length!!!
-
-    const dailyWx =
-      this.state.dailyWx &&
-      this.state.dailyWx.properties &&
-      this.state.dailyWx.properties.periods;
+    const periods = getProp('dailyWx.properties.periods', this.state, []);
+    const near = getProp('currentLocation.name', this.state);
 
     return (
       <div className="wrap">
         <Navbar />
         <main role="main" className="container-fluid">
           <section className="daily-wx">
-            <h1>Daily Weather</h1>
-            <ol>
-              {!dailyWx || dailyWx.length === 0 ? (
-                <li>No Wx?</li>
-              ) : (
-                dailyWx.map((day, idx) => <Day key={idx} {...day} />)
+            {periods && periods.length ? (
+              <div>
+                <h1>Daily Weather near {near}</h1>
+                <ol>
+                  {periods.map((day, idx) => <Day key={idx} {...day} />)}
+                </ol>
+              </div>
+            ) : (
+                <div>No Wx?</div>
               )}
-            </ol>
           </section>
         </main>
       </div>
@@ -172,4 +172,4 @@ export class App extends Component {
 export default App;
 
 const wrapper = document.getElementById('root');
-wrapper ? ReactDOM.render(<App />, wrapper) : false;
+ReactDOM.render(<App />, wrapper);

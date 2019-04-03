@@ -26,3 +26,7 @@ lastUsed: 123456
 - mobile!
 - need to include bootstrap js i think
 - other routes? (about, contact,...)
+- add about section
+- add readme
+
+"I got sick of heavy weather apps with ads... also i wanted to play with react"
